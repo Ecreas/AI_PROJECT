@@ -1,16 +1,20 @@
 import streamlit as st
 import json
-import re 
+import re
+import os  
 
-@st.cache_data # Load data only once
 
+@st.cache_data
 def get_menu_items(filename="menu_items.json"):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, filename)
+    
     try:
-        with open(filename, 'r') as file:
-            menu_items = json.load(file)
+        with open(file_path, 'r') as f:
+            menu_items = json.load(f)
         return menu_items
     except FileNotFoundError:
-        st.error(f"Error: The data file ({filename}) was not found.")
+        st.error(f"Error: The data file was not found at {file_path}.")
         return []
     except json.JSONDecodeError:
         st.error(f"Error: Could not read {filename}. Make sure it is a valid JSON.")
@@ -157,4 +161,5 @@ if prompt := st.chat_input("What's up?"):
         add_message("bot", "Sorry, the menu data isn't loaded. I can't help right now.")
 
     # Rerun the app to display the new messages immediately
+
     st.rerun()
