@@ -1,0 +1,44 @@
+[
+    {
+        "item_id": 101, "outlet_name": "V1", "item_name": "Nasi Lemak Ayam",
+        "price": 7.00, "category": "main", "is_vegan": false,
+        "is_vegetarian": false, "contains_nuts": true, "contains_dairy": false,
+        "is_gluten_free": false
+    },
+    {
+        "item_id": 102, "outlet_name": "V5", "item_name": "Mee Goreng Mamak",
+        "price": 6.50, "category": "main", "is_vegan": false,
+        "is_vegetarian": true, "contains_nuts": true, "contains_dairy": false,
+        "is_gluten_free": false
+    },
+    {
+        "item_id": 201, "outlet_name": "V5", "item_name": "Salad",
+        "price": 8.00, "category": "main", "is_vegan": true,
+        "is_vegetarian": true, "contains_nuts": false, "contains_dairy": false,
+        "is_gluten_free": true
+    },
+    {
+        "item_id": 202, "outlet_name": "V5", "item_name": "Chicken Chop",
+        "price": 12.50, "category": "main", "is_vegan": false,
+        "is_vegetarian": false, "contains_nuts": false, "contains_dairy": true,
+        "is_gluten_free": false
+    },
+    {
+        "item_id": 301, "outlet_name": "V5", "item_name": "Iced Latte",
+        "price": 9.00, "category": "drink", "is_vegan": false,
+        "is_vegetarian": true, "contains_nuts": false, "contains_dairy": true,
+        "is_gluten_free": true
+    },
+    {
+        "item_id": 302, "outlet_name": "idk hehe", "item_name": "Soy Iced Latte",
+        "price": 9.00, "category": "drink", "is_vegan": true,
+        "is_vegetarian": true, "contains_nuts": false, "contains_dairy": false,
+        "is_gluten_free": true
+    },
+    {
+        "item_id": 401, "outlet_name": "V5", "item_name": "Fries",
+        "price": 5.00, "category": "snack", "is_vegan": true,
+        "is_vegetarian": true, "contains_nuts": false, "contains_dairy": false,
+        "is_gluten_free": true
+    }
+]
