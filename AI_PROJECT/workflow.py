@@ -20,7 +20,7 @@ def get_menu_items(filename="menu_items.json"):
         st.error(f"Error: Could not read {filename}. Make sure it is a valid JSON.")
         return []
 
-# --- PHASE 2: AI RECOMMENDATION (Objective 1) ---
+# filter to put all user's recommendation in a dictionary
 def get_recommendations(all_items, preferences):
     
     recommended_items = all_items
@@ -54,7 +54,7 @@ def get_recommendations(all_items, preferences):
 
     return recommended_items
 
-# --- PHASE 3: STREAMLIT CHATBOT INTERFACE (Objective 2) ---
+# chatbot interface
 
 # Helper function to add a message to the chat
 def add_message(role, content):
@@ -71,7 +71,7 @@ def ask_next_question(user_prompt):
         add_message("bot", "Do you have any dietary needs? (e.g., vegan, vegetarian, gluten-free, or just 'none')")
         st.session_state.current_question = 'diet'
 
-    # State 2: Parse Diet, Ask Allergies
+    # ask Allergies
     elif current_question == 'diet':
         prompt = user_prompt.lower()
         if "vegan" in prompt: preferences['is_vegan'] = True
@@ -81,7 +81,7 @@ def ask_next_question(user_prompt):
         add_message("bot", "Roger that. Any allergies to avoid? (e.g., nuts, dairy, or 'none')")
         st.session_state.current_question = 'allergies'
 
-    # State 3: Parse Allergies, Ask Budget
+    # ask Budget
     elif current_question == 'allergies':
         prompt = user_prompt.lower()
         if "nut" in prompt: preferences['avoid_nuts'] = True
@@ -90,10 +90,10 @@ def ask_next_question(user_prompt):
         add_message("bot", "What's your budget? (e.g., '10', '15', or 'no budget')")
         st.session_state.current_question = 'budget'
 
-    # State 4: Parse Budget, Ask Category
+    # ask Category
     elif current_question == 'budget':
         prompt = user_prompt.lower()
-        # Use regex to find the first number in the string
+        
         match = re.search(r'\d+\.?\d*', prompt)
         if match:
             preferences['budget'] = float(match.group())
@@ -101,7 +101,7 @@ def ask_next_question(user_prompt):
         add_message("bot", "Last question: are you looking for a 'Main' course, 'Snack', 'Drink', or 'Any'?")
         st.session_state.current_question = 'category'
 
-    # State 5: Parse Category, Run Search
+    # ask category
     elif current_question == 'category':
         prompt = user_prompt.lower()
         if 'main' in prompt: preferences['category'] = 'main'
@@ -109,7 +109,7 @@ def ask_next_question(user_prompt):
         elif 'drink' in prompt: preferences['category'] = 'drink'
         else: preferences['category'] = 'any'
         
-        # --- Run the AI Search ---
+        # the main searching
         add_message("bot", "perfect, searching for recommendations based on your preferences...")
         
         results = get_recommendations(st.session_state.menu_data, preferences)
@@ -123,43 +123,39 @@ def ask_next_question(user_prompt):
             add_message("bot", message)
 
         add_message("bot", "Would you like to start a new search? (Just say 'hi' or 'yes')")
-        # Reset for the next conversation
         st.session_state.current_question = 'start'
         st.session_state.preferences = {}
 
 
-# --- Main App Execution ---
+
 
 st.set_page_config(page_title="UTP Food Bot", layout="centered")
 st.title("🤖 UTP Food Chatbot")
 
-# Load data once
+
 if "menu_data" not in st.session_state:
     st.session_state.menu_data = get_menu_items()
 
-# Initialize chat history and state
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
     st.session_state.current_question = 'start'
     st.session_state.preferences = {}
     add_message("bot", "Hi! I'm the UTP Food Bot. I can help you find daily meal options on campus. Are you looking for a recommendation?")
 
-# Display existing chat messages
+
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Get new user input
+
 if prompt := st.chat_input("What's up?"):
-    # Add user message to chat history
-    add_message("user", prompt)
     
-    # Handle the user's response and ask the next question
+    add_message("user", prompt)
+       
     if st.session_state.menu_data:
         ask_next_question(prompt)
     else:
         add_message("bot", "Sorry, the menu data isn't loaded. I can't help right now.")
-
-    # Rerun the app to display the new messages immediately
-
     st.rerun()
+
