@@ -1,44 +1,39 @@
 import streamlit as st
 import json
 import re
-import os  
+import os
+from thefuzz import process, fuzz 
 
-
+#getting the json
 @st.cache_data
 def get_menu_items(filename="menu_items.json"):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(current_dir, filename)
-    
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, filename)
+
     try:
-        with open(file_path, 'r') as f:
-            menu_items = json.load(f)
+        with open(file_path, 'r') as file:
+            menu_items = json.load(file)
         return menu_items
     except FileNotFoundError:
-        st.error(f"Error: The data file was not found at {file_path}.")
+        st.error(f"Error: The data file was not found at: {file_path}")
         return []
     except json.JSONDecodeError:
         st.error(f"Error: Could not read {filename}. Make sure it is a valid JSON.")
         return []
 
-# filter to put all user's recommendation in a dictionary
+# main filter
 def get_recommendations(all_items, preferences):
-    
     recommended_items = all_items
     
-    # 1. Filter by Budget
+    # Budget filter
     if preferences.get('budget'):
-        recommended_items = [
-            item for item in recommended_items if item['price'] <= preferences['budget']
-        ]
+        recommended_items = [item for item in recommended_items if item['price'] <= preferences['budget']]
 
-    # 2. Filter by Category
+    # Category filter
     if preferences.get('category') and preferences['category'] != 'any':
-        recommended_items = [
-            item for item in recommended_items 
-            if item['category'].lower() == preferences['category']
-        ]
+        recommended_items = [item for item in recommended_items if item['category'].lower() == preferences['category']]
 
-    # 3. Filter by Dietary Needs
+    # Diet filters
     if preferences.get('is_vegan'):
         recommended_items = [item for item in recommended_items if item['is_vegan']]
     if preferences.get('is_vegetarian'):
@@ -46,102 +41,119 @@ def get_recommendations(all_items, preferences):
     if preferences.get('is_gluten_free'):
         recommended_items = [item for item in recommended_items if item['is_gluten_free']]
 
-    # 4. Filter by Allergies (Avoid)
+    # Allergy filters
     if preferences.get('avoid_nuts'):
         recommended_items = [item for item in recommended_items if not item['contains_nuts']]
     if preferences.get('avoid_dairy'):
         recommended_items = [item for item in recommended_items if not item['contains_dairy']]
+    if preferences.get('avoid_shellfish'):
+        recommended_items = [item for item in recommended_items if not item['contains_shellfish']]   
 
     return recommended_items
 
-# chatbot interface
+# interface
 
-# Helper function to add a message to the chat
 def add_message(role, content):
     st.session_state.messages.append({"role": role, "content": content})
 
-# Helper function to get the next bot question and update state
 def ask_next_question(user_prompt):
     current_question = st.session_state.current_question
     preferences = st.session_state.preferences
 
-    # State 1: Start
+    
     if current_question == 'start':
-        add_message("bot", "Let me hel you to find the perfect meal, but first I need to ask you a few quick questions.")
-        add_message("bot", "Do you have any dietary needs? (e.g., vegan, vegetarian, gluten-free, or just 'none')")
+        add_message("bot", "First, I want to understand you better. First, any dietary needs? (e.g., vegan, gluten-free, or just 'none')")
         st.session_state.current_question = 'diet'
 
-    # ask Allergies
+    
     elif current_question == 'diet':
-        prompt = user_prompt.lower()
-        if "vegan" in prompt: preferences['is_vegan'] = True
-        if "vegetarian" in prompt: preferences['is_vegetarian'] = True
-        if "gluten" in prompt: preferences['is_gluten_free'] = True
         
-        add_message("bot", "Roger that. Any allergies to avoid? (e.g., nuts, dairy, or 'none')")
+        prompt = user_prompt.lower()
+        
+        if fuzz.partial_ratio("vegan", prompt) > 80: 
+            preferences['is_vegan'] = True
+        if fuzz.partial_ratio("gluten free", prompt) > 80: 
+            preferences['is_gluten_free'] = True
+        
+        add_message("bot", "Got it. Any allergies? (e.g., nuts, dairy, shellfish, or 'none')")
         st.session_state.current_question = 'allergies'
 
-    # ask Budget
+    
     elif current_question == 'allergies':
         prompt = user_prompt.lower()
-        if "nut" in prompt: preferences['avoid_nuts'] = True
-        if "dairy" in prompt: preferences['avoid_dairy'] = True
         
-        add_message("bot", "What's your budget? (e.g., '10', '15', or 'no budget')")
+        
+        if fuzz.partial_ratio("nuts", prompt) > 80: 
+            preferences['avoid_nuts'] = True
+        if fuzz.partial_ratio("dairy", prompt) > 80: 
+            preferences['avoid_dairy'] = True
+        if fuzz.partial_ratio("shellfish", prompt) > 80: 
+            preferences['avoid_shellfish'] = True
+        
+        add_message("bot", "What's your budget? (e.g., '10', '15')")
         st.session_state.current_question = 'budget'
 
-    # ask Category
+    
     elif current_question == 'budget':
-        prompt = user_prompt.lower()
-        
-        match = re.search(r'\d+\.?\d*', prompt)
+        match = re.search(r'\d+\.?\d*', user_prompt)
         if match:
             preferences['budget'] = float(match.group())
         
-        add_message("bot", "Last question: are you looking for a 'Main' course, 'Snack', 'Drink', or 'Any'?")
+        add_message("bot", "Last question: What are you in the mood for? (e.g., 'lunch', 'coffee', 'fries')")
         st.session_state.current_question = 'category'
 
-    # ask category
+
     elif current_question == 'category':
-        prompt = user_prompt.lower()
-        if 'main' in prompt: preferences['category'] = 'main'
-        elif 'snack' in prompt: preferences['category'] = 'snack'
-        elif 'drink' in prompt: preferences['category'] = 'drink'
-        else: preferences['category'] = 'any'
         
-        # the main searching
-        add_message("bot", "perfect, searching for recommendations based on your preferences...")
+        keyword_map = {
+            "main course": "main", "lunch": "main", "dinner": "main", "rice": "main", "chicken": "main", "heavy": "main",
+            "snack": "snack", "fries": "snack", "bite": "snack", "light food": "snack",
+            "drink": "drink", "coffee": "drink", "tea": "drink", "beverage": "drink", "latte": "drink", "thirsty": "drink", "sip": "drink",
+            "anything": "any", "whatever": "any", "surprise": "any"
+        }
         
+        possible_keywords = list(keyword_map.keys())
+        best_match, score = process.extractOne(user_prompt, possible_keywords)
+        
+        if score > 60:
+            detected_category = keyword_map[best_match]
+            preferences['category'] = detected_category
+            add_message("bot", f"so you want **'{best_match}'**. Got it! Searching for **{detected_category.upper()}** options...")
+        else:
+            preferences['category'] = 'any'
+            add_message("bot", "Sorry but I don't quite understand your request, I'll instead search for **ANYTHING**.")
+
+
+        #search
         results = get_recommendations(st.session_state.menu_data, preferences)
         
         if not results:
-            add_message("bot", "Sorry, I couldn't find any items that match all your preferences. Try searching again!")
+            add_message("bot", "Sorry, I couldn't find any items. Try searching again!")
         else:
-            message = f"I found {len(results)} option(s) for you:\n"
+            msg = f"I found {len(results)} option(s):\n"
             for item in results:
-                message += f"\n- **{item['item_name']}** at {item['outlet_name']} (RM{item['price']:.2f})"
-            add_message("bot", message)
+                outlet = item.get('outlet_name', 'Unknown Outlet')
+                price = item.get('price', 0.0)
+                msg += f"\n- **{item['item_name']}** at {outlet} (RM{price:.2f})"
+            add_message("bot", msg)
 
-        add_message("bot", "Would you like to start a new search? (Just say 'hi' or 'yes')")
+        add_message("bot", "Type 'reset' to start over.")
         st.session_state.current_question = 'start'
         st.session_state.preferences = {}
 
-
-
+# main 
 
 st.set_page_config(page_title="UTP Food Bot", layout="centered")
 st.title("🤖 UTP Food Chatbot")
 
-
 if "menu_data" not in st.session_state:
     st.session_state.menu_data = get_menu_items()
-
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
     st.session_state.current_question = 'start'
     st.session_state.preferences = {}
-    add_message("bot", "Hi! I'm the UTP Food Bot. I can help you find daily meal options on campus. Are you looking for a recommendation?")
+    add_message("bot", "Hi! I'm the UTP Food Bot. Ready to find food?")
 
 
 for message in st.session_state.messages:
@@ -149,13 +161,19 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 
-if prompt := st.chat_input("What's up?"):
-    
+if prompt := st.chat_input("Type here..."):
     add_message("user", prompt)
-       
+    
+    if prompt.lower() in ['reset', 'restart', 'start over']:
+        st.session_state.current_question = 'start'
+        st.session_state.preferences = {}
+        st.session_state.messages = []
+        add_message("bot", "Let's start over! Do you have any dietary needs?")
+        st.rerun()
+    
     if st.session_state.menu_data:
         ask_next_question(prompt)
     else:
-        add_message("bot", "Sorry, the menu data isn't loaded. I can't help right now.")
+        add_message("bot", "Error: Menu data not loaded.")
+    
     st.rerun()
-
