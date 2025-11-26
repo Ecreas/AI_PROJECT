@@ -49,6 +49,10 @@ def get_recommendations(all_items, preferences):
     if preferences.get('avoid_shellfish'):
         recommended_items = [item for item in recommended_items if not item['contains_shellfish']]   
 
+    # Cuisine filter
+    if preferences.get('cuisine') and preferences['cuisine'] != 'any':
+        recommended_items = [item for item in recommended_items if item['cuisine'].lower() == preferences['cuisine']]
+
     return recommended_items
 
 # interface
@@ -124,6 +128,24 @@ def ask_next_question(user_prompt):
             add_message("bot", "Sorry but I don't quite understand your request, I'll instead search for **ANYTHING**.")
 
 
+        add_message("bot", "Last question: What cuisine are you in the mood for? (e.g., 'Malaysian', 'Indonesian', 'Western', or 'any')")
+        st.session_state.current_question = 'cuisine'
+
+
+    elif current_question == 'cuisine':
+        valid_cuisines = ["western", "malay", "middle estern", "indonesian", "korean", "thai", "chinese", "fusion", "indian"]
+        prompt = user_prompt.lower()
+        best_match, score = process.extractOne(prompt, valid_cuisines)
+        
+            
+        
+        if "any" in prompt:
+            preferences['cuisine'] = 'any'
+            add_message("bot", "Okay, open to anything!")
+        elif score > 60:
+            preferences['cuisine'] = best_match
+            add_message("bot", f"Yum, **{best_match.title()}** food!")
+
         #search
         results = get_recommendations(st.session_state.menu_data, preferences)
         
@@ -177,3 +199,4 @@ if prompt := st.chat_input("Type here..."):
         add_message("bot", "Error: Menu data not loaded.")
     
     st.rerun()
+
