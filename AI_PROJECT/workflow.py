@@ -109,7 +109,7 @@ def ask_next_question(user_prompt):
             "main course": "main", "lunch": "main", "dinner": "main", "rice": "main", "chicken": "main", "heavy": "main",
             "snack": "snack", "fries": "snack", "bite": "snack", "light food": "snack",
             "drink": "drink", "coffee": "drink", "tea": "drink", "beverage": "drink", "latte": "drink", "thirsty": "drink", "sip": "drink",
-            "anything": "any", "whatever": "any", "surprise": "any", "anything" : "any", "any" : "any"
+            "anything": "any", "whatever": "any", "surprise": "any"
         }
         
         possible_keywords = list(keyword_map.keys())
@@ -168,7 +168,7 @@ if prompt := st.chat_input("Type here..."):
         st.session_state.current_question = 'start'
         st.session_state.preferences = {}
         st.session_state.messages = []
-        add_message("bot", "Let's start over! Do you have any dietary needs?")
+        add_message("bot", "Let's start over! ")
         st.rerun()
     
     if st.session_state.menu_data:
@@ -177,4 +177,3 @@ if prompt := st.chat_input("Type here..."):
         add_message("bot", "Error: Menu data not loaded.")
     
     st.rerun()
-
