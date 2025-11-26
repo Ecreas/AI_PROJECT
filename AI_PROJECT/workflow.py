@@ -49,7 +49,7 @@ def get_recommendations(all_items, preferences):
     if preferences.get('avoid_shellfish'):
         recommended_items = [item for item in recommended_items if not item['contains_shellfish']]   
 
-    # Cuisine filter
+        # Cuisine filter
     if preferences.get('cuisine') and preferences['cuisine'] != 'any':
         recommended_items = [item for item in recommended_items if item['cuisine'].lower() == preferences['cuisine']]
 
@@ -103,7 +103,7 @@ def ask_next_question(user_prompt):
         if match:
             preferences['budget'] = float(match.group())
         
-        add_message("bot", "Last question: What are you in the mood for? (e.g., 'lunch', 'coffee', 'fries')")
+        add_message("bot", "Next question: What are you in the mood for? (e.g., 'lunch', 'coffee', 'fries')")
         st.session_state.current_question = 'category'
 
 
@@ -145,6 +145,7 @@ def ask_next_question(user_prompt):
         elif score > 60:
             preferences['cuisine'] = best_match
             add_message("bot", f"Yum, **{best_match.title()}** food!")
+
 
         #search
         results = get_recommendations(st.session_state.menu_data, preferences)
@@ -199,4 +200,3 @@ if prompt := st.chat_input("Type here..."):
         add_message("bot", "Error: Menu data not loaded.")
     
     st.rerun()
-
