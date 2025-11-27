@@ -109,7 +109,8 @@ def ask_next_question(user_prompt):
 
     elif current_question == 'category':
         
-       keyword_map = {
+        
+        keyword_map = {
     # main dish
     "main": "main dish", "main course": "main dish", "lunch": "main dish", 
     "dinner": "main dish", "rice": "main dish", "chicken": "main dish", 
@@ -129,7 +130,9 @@ def ask_next_question(user_prompt):
     # free
     "anything": "any", "whatever": "any", "surprise": "any"
             }
-        
+
+
+    
         possible_keywords = list(keyword_map.keys())
         best_match, score = process.extractOne(user_prompt, possible_keywords)
         
@@ -214,4 +217,3 @@ if prompt := st.chat_input("Type here..."):
         add_message("bot", "Error: Menu data not loaded.")
     
     st.rerun()
-
