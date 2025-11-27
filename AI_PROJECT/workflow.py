@@ -109,12 +109,26 @@ def ask_next_question(user_prompt):
 
     elif current_question == 'category':
         
-        keyword_map = {
-            "main course": "main", "lunch": "main", "dinner": "main", "rice": "main", "chicken": "main", "heavy": "main",
-            "snack": "snack", "fries": "snack", "bite": "snack", "light food": "snack",
-            "drink": "drink", "coffee": "drink", "tea": "drink", "beverage": "drink", "latte": "drink", "thirsty": "drink", "sip": "drink",
-            "anything": "any", "whatever": "any", "surprise": "any"
-        }
+       keyword_map = {
+    # main dish
+    "main": "main dish", "main course": "main dish", "lunch": "main dish", 
+    "dinner": "main dish", "rice": "main dish", "chicken": "main dish", 
+    "heavy": "main dish", "burger": "main dish", "pasta": "main dish",
+    
+    # snack
+    "snack": "snack", "fries": "snack", "bite": "snack", "light": "snack",
+    "sandwich": "snack",
+    
+    # dessert
+    "dessert": "dessert", "sweet": "dessert", "cake": "dessert", 
+    "chocolate": "dessert", "ice cream": "dessert", "waffle": "dessert",
+    
+    # sides
+    "side": "side", "soup": "side", "extra": "side", "nugget": "side",
+
+    # free
+    "anything": "any", "whatever": "any", "surprise": "any"
+            }
         
         possible_keywords = list(keyword_map.keys())
         best_match, score = process.extractOne(user_prompt, possible_keywords)
@@ -200,3 +214,4 @@ if prompt := st.chat_input("Type here..."):
         add_message("bot", "Error: Menu data not loaded.")
     
     st.rerun()
+
